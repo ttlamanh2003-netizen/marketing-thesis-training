@@ -4,44 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Marketing English Flip Cards</title>
-  <meta name="description" content="Review 999 marketing keywords with Vietnamese support and simple English definitions." />
+  <meta name="description" content="Review 999 marketing keywords with Vietnamese support, US IPA phonetics, and click-to-speak pronunciation." />
   <meta property="og:title" content="Marketing English Flip Cards" />
-  <meta property="og:description" content="Review 999 marketing keywords with Vietnamese support and simple English definitions." />
+  <meta property="og:description" content="Review 999 marketing keywords with Vietnamese support, US IPA phonetics, and click-to-speak pronunciation." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://learnwithla.github.io/marketing-thesis-training/vocab.html" />
   <meta property="og:image" content="https://learnwithla.github.io/marketing-thesis-training/og-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Marketing English Flip Cards" />
-  <meta name="twitter:description" content="Review 999 marketing keywords with Vietnamese support and simple English definitions." />
+  <meta name="twitter:description" content="Review 999 marketing keywords with Vietnamese support, US IPA phonetics, and click-to-speak pronunciation." />
   <meta name="twitter:image" content="https://learnwithla.github.io/marketing-thesis-training/og-image.png" />
+  <link rel="icon" href="la-logo.jpg" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <a class="brand" href="index.html" aria-label="Go to homepage">
-        <div class="logo">La</div>
+        <img class="logo-img" src="la-logo.jpg" alt="La logo" />
         <div>
           <h1>Flip Cards</h1>
-          <p>Click the card to reveal the meaning.</p>
+          <p>US IPA + click-to-speak pronunciation.</p>
         </div>
       </a>
       <nav class="nav" aria-label="Main navigation">
         <a href="index.html">Home</a>
         <a class="active" href="vocab.html">Flip Cards</a>
         <a href="practice.html">Practice Time</a>
+        <a href="section.html">Section</a>
         <a href="casestudy.html">Case Study</a>
       </nav>
     </header>
 
     <main>
       <h2 class="page-title">999 Marketing Keywords</h2>
-      <p class="page-subtitle">Study by topic section. Click the card, the Reveal button, or press Space to show the Vietnamese translation and simple English definition.</p>
+      <p class="page-subtitle">Each card includes Vietnamese support, a simple English definition, US IPA phonetics, and a speaker button. The speaker tries to use a female US English voice when the browser/device has one available.</p>
 
       <div class="toolbar">
         <div class="filters">
           <select id="vocabSection" aria-label="Filter by section"></select>
-          <input id="vocabSearch" type="search" placeholder="Search terms, Vietnamese, or definitions..." aria-label="Search vocabulary" />
+          <input id="vocabSearch" type="search" placeholder="Search terms, Vietnamese, definitions, or IPA..." aria-label="Search vocabulary" />
         </div>
         <span class="pill" id="vocabCount"></span>
       </div>
@@ -49,7 +51,7 @@
       <div class="study-wrap">
         <div class="progress"><div class="bar" id="vocabBar"></div></div>
         <div class="card-panel">
-          <button class="flash-card" id="flashCard" aria-label="Click to reveal card"></button>
+          <div class="flash-card" id="flashCard" role="button" tabindex="0" aria-label="Click to reveal card"></div>
         </div>
         <div class="controls">
           <button class="btn secondary" id="vocabPrev">Previous</button>
@@ -57,6 +59,7 @@
           <button class="btn secondary" id="vocabNext">Next</button>
           <button class="btn secondary" id="vocabShuffle">Shuffle</button>
         </div>
+        <p class="voice-note" id="voiceNote">Voice loading...</p>
       </div>
     </main>
   </div>
@@ -65,18 +68,77 @@
   <script>
     const DATA = window.VOCAB_DATA || [];
     const topics = [...new Map(DATA.map(x => [x.section, x.topic])).entries()].sort((a,b)=>a[0]-b[0]);
-    const state = { index: 0, revealed: false, items: [...DATA] };
+    const state = { index: 0, revealed: false, items: [...DATA], selectedVoice: null };
     const $ = (id) => document.getElementById(id);
     function escapeHTML(s) { return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
     function populateSectionSelect(select) {
       select.innerHTML = '<option value="all">All sections</option>' + topics.map(([num, topic]) => `<option value="${num}">Section ${num} — ${escapeHTML(topic)}</option>`).join('');
     }
+
+    function chooseVoice() {
+      const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+      if (!voices.length) return null;
+      const scored = voices.map(v => {
+        const name = (v.name || '').toLowerCase();
+        const lang = (v.lang || '').toLowerCase();
+        let score = 0;
+        if (lang === 'en-us') score += 100;
+        else if (lang.startsWith('en-us')) score += 90;
+        else if (lang.startsWith('en')) score += 40;
+        if (/female|woman|zira|jenny|aria|samantha|victoria|allison|ava|susan|google us english|microsoft/.test(name)) score += 35;
+        if (/male|david|mark|guy/.test(name)) score -= 20;
+        if (/natural|neural|premium|enhanced/.test(name)) score += 10;
+        return { voice: v, score };
+      }).sort((a,b)=>b.score-a.score);
+      return scored[0]?.voice || null;
+    }
+
+    function refreshVoiceNote() {
+      state.selectedVoice = chooseVoice();
+      const note = $('voiceNote');
+      if (!window.speechSynthesis) { note.textContent = 'Speech is not supported in this browser.'; return; }
+      if (state.selectedVoice) {
+        note.textContent = `Voice selected: ${state.selectedVoice.name} (${state.selectedVoice.lang}). Female US voice is used when available on this device.`;
+      } else {
+        note.textContent = 'Voice loading. Try clicking the speaker once if the first tap is silent.';
+      }
+    }
+
+    if ('speechSynthesis' in window) {
+      refreshVoiceNote();
+      window.speechSynthesis.onvoiceschanged = refreshVoiceNote;
+      setTimeout(refreshVoiceNote, 600);
+      setTimeout(refreshVoiceNote, 1500);
+    }
+
+    function speak(text, btn) {
+      if (!('speechSynthesis' in window)) return;
+      if (!text) return;
+      window.speechSynthesis.cancel();
+      document.querySelectorAll('.speak-btn').forEach(b => b.classList.remove('speaking'));
+      const utterance = new SpeechSynthesisUtterance(text);
+      state.selectedVoice = chooseVoice();
+      if (state.selectedVoice) utterance.voice = state.selectedVoice;
+      utterance.lang = 'en-US';
+      utterance.rate = 0.82;
+      utterance.pitch = 1.08;
+      utterance.volume = 1;
+      if (btn && btn.classList.contains('speak-btn')) btn.classList.add('speaking');
+      utterance.onend = utterance.onerror = () => { if (btn && btn.classList.contains('speak-btn')) btn.classList.remove('speaking'); };
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakerButton(item, label='Speak word') {
+      return `<button type="button" class="speak-btn" title="${label}" aria-label="${label}: ${escapeHTML(item.term)}" data-speak="${escapeHTML(item.speak || item.term)}">🔊</button>`;
+    }
+
     function filterItems() {
       const sectionVal = $('vocabSection').value;
       const q = $('vocabSearch').value.trim().toLowerCase();
       const list = DATA.filter(item => {
         const sectionOK = sectionVal === 'all' || item.section === Number(sectionVal);
-        const text = `${item.id} ${item.term} ${item.vi || ''} ${item.definition} ${item.topic}`.toLowerCase();
+        const text = `${item.id} ${item.term} ${item.vi || ''} ${item.definition} ${item.topic} ${item.ipa || ''}`.toLowerCase();
         return sectionOK && (!q || text.includes(q));
       });
       state.items = list;
@@ -84,7 +146,9 @@
       state.revealed = false;
       renderVocab();
     }
+
     function progressPct() { return state.items.length ? ((state.index + 1) / state.items.length) * 100 : 0; }
+
     function renderVocab() {
       const items = state.items;
       $('vocabCount').textContent = items.length ? `${state.index + 1} / ${items.length} cards` : '0 cards';
@@ -92,26 +156,37 @@
       if (!items.length) { $('flashCard').innerHTML = '<div class="empty">No cards match this filter.</div>'; return; }
       const item = items[state.index];
       if (!state.revealed) {
-        $('flashCard').innerHTML = `<div><div class="week-tag">#${item.id} • Section ${item.section} — ${escapeHTML(item.topic)}</div><p class="term">${escapeHTML(item.term)}</p><p class="hint">Click the word or press <span class="kbd">Space</span> to reveal the meaning.</p></div>`;
+        $('flashCard').innerHTML = `<div><div class="week-tag">#${item.id} • Section ${item.section} — ${escapeHTML(item.topic)}</div><div class="term-line"><p class="term">${escapeHTML(item.term)}</p>${speakerButton(item)}</div><p class="ipa">${escapeHTML(item.ipa || '')}</p><p class="hint">Click the card or press <span class="kbd">Space</span> to reveal the meaning. Click 🔊 to hear the word.</p></div>`;
         $('vocabFlip').textContent = 'Reveal';
       } else {
-        $('flashCard').innerHTML = `<div><div class="week-tag">#${item.id} • Section ${item.section} — ${escapeHTML(item.topic)}</div><p class="flipped-term">${escapeHTML(item.term)}</p><p class="vi-term">${escapeHTML(item.vi || '')}</p><p class="definition">${escapeHTML(item.definition)}</p><p class="hint">Click again to hide the meaning.</p></div>`;
+        $('flashCard').innerHTML = `<div><div class="week-tag">#${item.id} • Section ${item.section} — ${escapeHTML(item.topic)}</div><div class="flipped-term-line"><p class="flipped-term">${escapeHTML(item.term)}</p>${speakerButton(item)}</div><p class="ipa">${escapeHTML(item.ipa || '')}</p><p class="vi-term">${escapeHTML(item.vi || '')}</p><p class="definition">${escapeHTML(item.definition)}</p><div class="speaker-toolbar"><button type="button" class="mini-btn" data-speak="${escapeHTML(item.speak || item.term)}">🔊 Speak word</button><button type="button" class="mini-btn" data-speak="${escapeHTML(item.definition)}">🔊 Speak definition</button></div><p class="hint">Click the card again to hide the meaning.</p></div>`;
         $('vocabFlip').textContent = 'Hide';
       }
     }
-    function next() { if (!state.items.length) return; state.index = (state.index + 1) % state.items.length; state.revealed = false; renderVocab(); }
-    function prev() { if (!state.items.length) return; state.index = (state.index - 1 + state.items.length) % state.items.length; state.revealed = false; renderVocab(); }
+
+    function stopSpeech() { window.speechSynthesis?.cancel?.(); }
+    function next() { if (!state.items.length) return; stopSpeech(); state.index = (state.index + 1) % state.items.length; state.revealed = false; renderVocab(); }
+    function prev() { if (!state.items.length) return; stopSpeech(); state.index = (state.index - 1 + state.items.length) % state.items.length; state.revealed = false; renderVocab(); }
     function shuffle() {
       if (state.items.length < 2) return;
+      stopSpeech();
       let randomIndex = Math.floor(Math.random() * state.items.length);
       if (randomIndex === state.index) randomIndex = (randomIndex + 1) % state.items.length;
       state.index = randomIndex; state.revealed = false; renderVocab();
     }
     function toggleReveal() { if (!state.items.length) return; state.revealed = !state.revealed; renderVocab(); }
+
     populateSectionSelect($('vocabSection'));
     $('vocabSection').addEventListener('input', filterItems);
     $('vocabSearch').addEventListener('input', filterItems);
-    $('flashCard').addEventListener('click', toggleReveal);
+    $('flashCard').addEventListener('click', (e) => {
+      const speakTarget = e.target.closest('[data-speak]');
+      if (speakTarget) { e.preventDefault(); e.stopPropagation(); speak(speakTarget.dataset.speak, speakTarget); return; }
+      toggleReveal();
+    });
+    $('flashCard').addEventListener('keydown', (e) => {
+      if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); toggleReveal(); }
+    });
     $('vocabFlip').addEventListener('click', toggleReveal);
     $('vocabNext').addEventListener('click', next);
     $('vocabPrev').addEventListener('click', prev);
@@ -119,7 +194,7 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') next();
       if (e.key === 'ArrowLeft') prev();
-      if (e.code === 'Space' && !['INPUT','SELECT'].includes(document.activeElement.tagName)) { e.preventDefault(); toggleReveal(); }
+      if (e.code === 'Space' && !['INPUT','SELECT','BUTTON'].includes(document.activeElement.tagName)) { e.preventDefault(); toggleReveal(); }
     });
     renderVocab();
   </script>

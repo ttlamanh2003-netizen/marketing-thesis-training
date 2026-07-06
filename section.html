@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketing English Sections | Learn with La</title>
+  <meta name="description" content="Study 999 marketing keywords by section with speaker buttons, US IPA, Vietnamese meaning, and simple English definitions." />
+  <meta property="og:title" content="Marketing English Sections" />
+  <meta property="og:description" content="Study 999 marketing keywords by section with speaker buttons, US IPA, Vietnamese meaning, and simple English definitions." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://learnwithla.github.io/marketing-thesis-training/section.html" />
+  <meta property="og:image" content="https://learnwithla.github.io/marketing-thesis-training/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Marketing English Sections" />
+  <meta name="twitter:description" content="Study 999 marketing keywords by section with speaker buttons, US IPA, Vietnamese meaning, and simple English definitions." />
+  <meta name="twitter:image" content="https://learnwithla.github.io/marketing-thesis-training/og-image.png" />
+  <link rel="icon" href="la-logo.jpg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Go to homepage">
+        <img class="logo-img" src="la-logo.jpg" alt="La logo" />
+        <div>
+          <h1>Section</h1>
+          <p>Table view by topic • speaker • US IPA</p>
+        </div>
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="vocab.html">Flip Cards</a>
+        <a href="practice.html">Practice Time</a>
+        <a class="active" href="section.html">Section</a>
+        <a href="casestudy.html">Case Study</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero-card section-hero" id="top">
+        <div class="eyebrow">Table of Contents</div>
+        <h2 class="section-title">Choose a section to study.</h2>
+        <p class="subtitle">Each section opens as a table. The left column shows the keyword, speaker button, and US IPA. The right column shows the Vietnamese meaning and simple English explanation.</p>
+        <div class="section-tools">
+          <input id="sectionSearch" type="search" placeholder="Search sections, words, Vietnamese, definitions, or IPA..." aria-label="Search sections and vocabulary" />
+          <span class="pill" id="sectionCount">Loading...</span>
+        </div>
+        <div class="section-toc" id="sectionToc" aria-label="Vocabulary section table of contents"></div>
+      </section>
+
+      <section class="section-output" id="sectionOutput" aria-live="polite">
+        <div class="empty section-empty">Choose a section above to open its table.</div>
+      </section>
+      <p class="voice-note" id="voiceNote">Voice loading...</p>
+    </main>
+  </div>
+
+  <script src="vocab-data.js"></script>
+  <script>
+    const DATA = window.VOCAB_DATA || [];
+    const $ = (id) => document.getElementById(id);
+    const state = { selectedVoice: null, activeSection: null, search: '' };
+    function escapeHTML(s) { return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+    function sectionSummary() {
+      const map = new Map();
+      DATA.forEach(item => {
+        if (!map.has(item.section)) map.set(item.section, { section: item.section, topic: item.topic, count: 0 });
+        map.get(item.section).count += 1;
+      });
+      return [...map.values()].sort((a,b)=>a.section-b.section);
+    }
+    function chooseVoice() {
+      const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+      if (!voices.length) return null;
+      const scored = voices.map(v => {
+        const name = (v.name || '').toLowerCase();
+        const lang = (v.lang || '').toLowerCase();
+        let score = 0;
+        if (lang === 'en-us') score += 100;
+        else if (lang.startsWith('en-us')) score += 90;
+        else if (lang.startsWith('en')) score += 40;
+        if (/female|woman|zira|jenny|aria|samantha|victoria|allison|ava|susan|google us english|microsoft/.test(name)) score += 35;
+        if (/male|david|mark|guy/.test(name)) score -= 20;
+        if (/natural|neural|premium|enhanced/.test(name)) score += 10;
+        return { voice: v, score };
+      }).sort((a,b)=>b.score-a.score);
+      return scored[0]?.voice || null;
+    }
+    function refreshVoiceNote() {
+      state.selectedVoice = chooseVoice();
+      const note = $('voiceNote');
+      if (!window.speechSynthesis) { note.textContent = 'Speech is not supported in this browser.'; return; }
+      if (state.selectedVoice) note.textContent = `Voice selected: ${state.selectedVoice.name} (${state.selectedVoice.lang}). Female US voice is used when available on this device.`;
+      else note.textContent = 'Voice loading. Try clicking the speaker once if the first tap is silent.';
+    }
+    if ('speechSynthesis' in window) {
+      refreshVoiceNote();
+      window.speechSynthesis.onvoiceschanged = refreshVoiceNote;
+      setTimeout(refreshVoiceNote, 600);
+      setTimeout(refreshVoiceNote, 1500);
+    }
+    function speak(text, btn) {
+      if (!('speechSynthesis' in window) || !text) return;
+      window.speechSynthesis.cancel();
+      document.querySelectorAll('.speak-btn').forEach(b => b.classList.remove('speaking'));
+      const utterance = new SpeechSynthesisUtterance(text);
+      state.selectedVoice = chooseVoice();
+      if (state.selectedVoice) utterance.voice = state.selectedVoice;
+      utterance.lang = 'en-US';
+      utterance.rate = 0.82;
+      utterance.pitch = 1.08;
+      utterance.volume = 1;
+      if (btn) btn.classList.add('speaking');
+      utterance.onend = utterance.onerror = () => { if (btn) btn.classList.remove('speaking'); };
+      window.speechSynthesis.speak(utterance);
+    }
+    function renderToc() {
+      const q = state.search.toLowerCase();
+      const summaries = sectionSummary().map(sec => {
+        const items = DATA.filter(item => item.section === sec.section);
+        const match = !q || `${sec.section} ${sec.topic} ${items.map(i => `${i.term} ${i.vi} ${i.definition} ${i.ipa}`).join(' ')}`.toLowerCase().includes(q);
+        return { ...sec, match };
+      }).filter(sec => sec.match);
+      $('sectionCount').textContent = `${DATA.length} words • ${sectionSummary().length} sections`;
+      $('sectionToc').innerHTML = summaries.map(sec => `<button type="button" class="section-toc-card ${state.activeSection === sec.section ? 'active' : ''}" data-section="${sec.section}"><span>${String(sec.section).padStart(2,'0')}</span><strong>${escapeHTML(sec.topic)}</strong><small>${sec.count} words</small></button>`).join('') || '<div class="empty">No sections match this search.</div>';
+    }
+    function filteredItemsForSection(section) {
+      const q = state.search.toLowerCase();
+      return DATA.filter(item => {
+        const sectionOK = item.section === section;
+        const text = `${item.id} ${item.term} ${item.vi || ''} ${item.definition} ${item.topic} ${item.ipa || ''}`.toLowerCase();
+        return sectionOK && (!q || text.includes(q) || item.topic.toLowerCase().includes(q));
+      });
+    }
+    function renderSection(section, doScroll=true) {
+      state.activeSection = Number(section);
+      const allForSection = DATA.filter(item => item.section === state.activeSection);
+      const topic = allForSection[0]?.topic || 'Section';
+      const items = filteredItemsForSection(state.activeSection);
+      renderToc();
+      if (!items.length) {
+        $('sectionOutput').innerHTML = `<div class="empty section-empty">No words match this search inside Section ${state.activeSection}.</div>`;
+        return;
+      }
+      const rows = items.map(item => `
+        <tr>
+          <td class="section-word-cell">
+            <div class="section-row-number">#${String(item.id).padStart(3,'0')}</div>
+            <div class="table-word-line"><strong>${escapeHTML(item.term)}</strong><button type="button" class="speak-btn table-speak" aria-label="Speak ${escapeHTML(item.term)}" title="Speak ${escapeHTML(item.term)}" data-speak="${escapeHTML(item.speak || item.term)}">🔊</button></div>
+            <div class="table-ipa">${escapeHTML(item.ipa || '')}</div>
+          </td>
+          <td class="section-meaning-cell">
+            <div class="table-vi">${escapeHTML(item.vi || '')}</div>
+            <div class="table-definition">${escapeHTML(item.definition)}</div>
+          </td>
+        </tr>`).join('');
+      $('sectionOutput').innerHTML = `
+        <article class="section-table-card" id="section-${state.activeSection}">
+          <div class="section-table-head">
+            <div>
+              <div class="eyebrow">Section ${state.activeSection}</div>
+              <h2>${escapeHTML(topic)}</h2>
+              <p>${items.length} words shown${items.length !== allForSection.length ? ` from ${allForSection.length} total words in this section` : ''}.</p>
+            </div>
+            <a class="mini-btn" href="#top">Back to contents</a>
+          </div>
+          <div class="section-table-wrap">
+            <table class="section-table">
+              <thead><tr><th>Keyword + Speaker + US IPA</th><th>Vietnamese Meaning + Simple English Explanation</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </article>`;
+      if (doScroll) $('sectionOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    $('sectionToc').addEventListener('click', (e) => {
+      const card = e.target.closest('[data-section]');
+      if (!card) return;
+      renderSection(Number(card.dataset.section));
+      history.replaceState(null, '', `#section-${card.dataset.section}`);
+    });
+    $('sectionOutput').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-speak]');
+      if (!btn) return;
+      e.preventDefault();
+      speak(btn.dataset.speak, btn);
+    });
+    $('sectionSearch').addEventListener('input', (e) => {
+      state.search = e.target.value.trim();
+      renderToc();
+      if (state.activeSection) renderSection(state.activeSection, false);
+    });
+    renderToc();
+    const hashMatch = location.hash.match(/section-(\d+)/);
+    if (hashMatch) renderSection(Number(hashMatch[1]), false);
+  </script>
+</body>
+</html>
