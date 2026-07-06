@@ -23,27 +23,31 @@
       <a class="brand" href="index.html" aria-label="Go to homepage">
         <img class="logo-img" src="la-logo.jpg" alt="La logo" />
         <div>
-          <h1>Flip Cards</h1>
-          <p>US IPA + click-to-speak pronunciation.</p>
+          <h1 data-i18n="vocabHeader">Flip Cards</h1>
+          <p data-i18n="vocabHeaderSub">US IPA + click-to-speak pronunciation.</p>
         </div>
       </a>
       <nav class="nav" aria-label="Main navigation">
-        <a href="index.html">Home</a>
-        <a class="active" href="vocab.html">Flip Cards</a>
-        <a href="practice.html">Practice Time</a>
-        <a href="section.html">Section</a>
-        <a href="casestudy.html">Case Study</a>
+        <a href="index.html" data-i18n="home">Home</a>
+        <a class="active" href="vocab.html" data-i18n="flipCards">Flip Cards</a>
+        <a href="practice.html" data-i18n="practiceTime">Practice Time</a>
+        <a href="section.html" data-i18n="section">Section</a>
+        <a href="casestudy.html" data-i18n="caseStudy">Case Study</a>
       </nav>
+      <div class="lang-switch" role="group" aria-label="Language" data-i18n-attr="aria-label:langLabel">
+        <button type="button" data-set-lang="en">🇺🇸 EN</button>
+        <button type="button" data-set-lang="vi">🇻🇳 VI</button>
+      </div>
     </header>
 
     <main>
-      <h2 class="page-title">999 Marketing Keywords</h2>
-      <p class="page-subtitle">Each card includes Vietnamese support, a simple English definition, US IPA phonetics, and a speaker button. The speaker tries to use a female US English voice when the browser/device has one available.</p>
+      <h2 class="page-title" data-i18n="vocabTitle">999 Marketing Keywords</h2>
+      <p class="page-subtitle" data-i18n="vocabSubtitle">Each card includes Vietnamese support, a simple English definition, US IPA phonetics, and a speaker button. The speaker tries to use a female US English voice when the browser/device has one available.</p>
 
       <div class="toolbar">
         <div class="filters">
-          <select id="vocabSection" aria-label="Filter by section"></select>
-          <input id="vocabSearch" type="search" placeholder="Search terms, Vietnamese, definitions, or IPA..." aria-label="Search vocabulary" />
+          <select id="vocabSection" aria-label="Filter by section" data-i18n-attr="aria-label:filterBySection"></select>
+          <input id="vocabSearch" type="search" placeholder="Search terms, Vietnamese, definitions, or IPA..." aria-label="Search vocabulary" data-i18n-attr="placeholder:vocabSearchPlaceholder;aria-label:vocabSearchAria" />
         </div>
         <span class="pill" id="vocabCount"></span>
       </div>
@@ -54,26 +58,28 @@
           <div class="flash-card" id="flashCard" role="button" tabindex="0" aria-label="Click to reveal card"></div>
         </div>
         <div class="controls">
-          <button class="btn secondary" id="vocabPrev">Previous</button>
-          <button class="btn" id="vocabFlip">Reveal</button>
-          <button class="btn secondary" id="vocabNext">Next</button>
-          <button class="btn secondary" id="vocabShuffle">Shuffle</button>
+          <button class="btn secondary" id="vocabPrev" data-i18n="previous">Previous</button>
+          <button class="btn" id="vocabFlip" data-i18n="reveal">Reveal</button>
+          <button class="btn secondary" id="vocabNext" data-i18n="next">Next</button>
+          <button class="btn secondary" id="vocabShuffle" data-i18n="shuffle">Shuffle</button>
         </div>
-        <p class="voice-note" id="voiceNote">Voice loading...</p>
+        <p class="voice-note" id="voiceNote" data-i18n="voiceLoading">Voice loading...</p>
       </div>
     </main>
   </div>
 
   <script src="vocab-data.js"></script>
+  <script src="lang.js"></script>
   <script>
     const DATA = window.VOCAB_DATA || [];
     const topics = [...new Map(DATA.map(x => [x.section, x.topic])).entries()].sort((a,b)=>a[0]-b[0]);
     const state = { index: 0, revealed: false, items: [...DATA], selectedVoice: null };
     const $ = (id) => document.getElementById(id);
+    const tr = (key, vars) => window.LaLang ? window.LaLang.t(key, vars) : key;
     function escapeHTML(s) { return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 
     function populateSectionSelect(select) {
-      select.innerHTML = '<option value="all">All sections</option>' + topics.map(([num, topic]) => `<option value="${num}">Section ${num} — ${escapeHTML(topic)}</option>`).join('');
+      select.innerHTML = `<option value="all">${tr('allSections')}</option>` + topics.map(([num, topic]) => `<option value="${num}">${tr('section')} ${num} — ${escapeHTML(topic)}</option>`).join('');
     }
 
     function chooseVoice() {
@@ -97,11 +103,11 @@
     function refreshVoiceNote() {
       state.selectedVoice = chooseVoice();
       const note = $('voiceNote');
-      if (!window.speechSynthesis) { note.textContent = 'Speech is not supported in this browser.'; return; }
+      if (!window.speechSynthesis) { note.textContent = tr('speechUnsupported'); return; }
       if (state.selectedVoice) {
-        note.textContent = `Voice selected: ${state.selectedVoice.name} (${state.selectedVoice.lang}). Female US voice is used when available on this device.`;
+        note.textContent = tr('voiceSelected', { voice: state.selectedVoice.name, lang: state.selectedVoice.lang });
       } else {
-        note.textContent = 'Voice loading. Try clicking the speaker once if the first tap is silent.';
+        note.textContent = tr('voiceLoading');
       }
     }
 
@@ -129,7 +135,7 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    function speakerButton(item, label='Speak word') {
+    function speakerButton(item, label=tr('speakWord')) {
       return `<button type="button" class="speak-btn" title="${label}" aria-label="${label}: ${escapeHTML(item.term)}" data-speak="${escapeHTML(item.speak || item.term)}">🔊</button>`;
     }
 
@@ -151,16 +157,16 @@
 
     function renderVocab() {
       const items = state.items;
-      $('vocabCount').textContent = items.length ? `${state.index + 1} / ${items.length} cards` : '0 cards';
+      $('vocabCount').textContent = items.length ? tr('cardsCount', { current: state.index + 1, total: items.length }) : tr('zeroCards');
       $('vocabBar').style.width = progressPct() + '%';
-      if (!items.length) { $('flashCard').innerHTML = '<div class="empty">No cards match this filter.</div>'; return; }
+      if (!items.length) { $('flashCard').innerHTML = `<div class="empty">${tr('noCards')}</div>`; return; }
       const item = items[state.index];
       if (!state.revealed) {
-        $('flashCard').innerHTML = `<div><div class="week-tag">#${item.id} • Section ${item.section} — ${escapeHTML(item.topic)}</div><div class="term-line"><p class="term">${escapeHTML(item.term)}</p>${speakerButton(item)}</div><p class="ipa">${escapeHTML(item.ipa || '')}</p><p class="hint">Click the card or press <span class="kbd">Space</span> to reveal the meaning. Click 🔊 to hear the word.</p></div>`;
-        $('vocabFlip').textContent = 'Reveal';
+        $('flashCard').innerHTML = `<div><div class="week-tag">#${item.id} • ${tr('section')} ${item.section} — ${escapeHTML(item.topic)}</div><div class="term-line"><p class="term">${escapeHTML(item.term)}</p>${speakerButton(item)}</div><p class="ipa">${escapeHTML(item.ipa || '')}</p><p class="hint">${tr('clickRevealHint')}</p></div>`;
+        $('vocabFlip').textContent = tr('reveal');
       } else {
-        $('flashCard').innerHTML = `<div><div class="week-tag">#${item.id} • Section ${item.section} — ${escapeHTML(item.topic)}</div><div class="flipped-term-line"><p class="flipped-term">${escapeHTML(item.term)}</p>${speakerButton(item)}</div><p class="ipa">${escapeHTML(item.ipa || '')}</p><p class="vi-term">${escapeHTML(item.vi || '')}</p><p class="definition">${escapeHTML(item.definition)}</p><div class="speaker-toolbar"><button type="button" class="mini-btn" data-speak="${escapeHTML(item.speak || item.term)}">🔊 Speak word</button><button type="button" class="mini-btn" data-speak="${escapeHTML(item.definition)}">🔊 Speak definition</button></div><p class="hint">Click the card again to hide the meaning.</p></div>`;
-        $('vocabFlip').textContent = 'Hide';
+        $('flashCard').innerHTML = `<div><div class="week-tag">#${item.id} • ${tr('section')} ${item.section} — ${escapeHTML(item.topic)}</div><div class="flipped-term-line"><p class="flipped-term">${escapeHTML(item.term)}</p>${speakerButton(item)}</div><p class="ipa">${escapeHTML(item.ipa || '')}</p><p class="vi-term">${escapeHTML(item.vi || '')}</p><p class="definition">${escapeHTML(item.definition)}</p><div class="speaker-toolbar"><button type="button" class="mini-btn" data-speak="${escapeHTML(item.speak || item.term)}">🔊 ${tr('speakWord')}</button><button type="button" class="mini-btn" data-speak="${escapeHTML(item.definition)}">🔊 ${tr('speakDefinition')}</button></div><p class="hint">${tr('clickHideHint')}</p></div>`;
+        $('vocabFlip').textContent = tr('hide');
       }
     }
 
@@ -196,6 +202,7 @@
       if (e.key === 'ArrowLeft') prev();
       if (e.code === 'Space' && !['INPUT','SELECT','BUTTON'].includes(document.activeElement.tagName)) { e.preventDefault(); toggleReveal(); }
     });
+    window.addEventListener('languagechange', () => { const currentSectionValue = $('vocabSection').value; populateSectionSelect($('vocabSection')); $('vocabSection').value = currentSectionValue; renderVocab(); refreshVoiceNote(); });
     renderVocab();
   </script>
 </body>

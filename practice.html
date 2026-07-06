@@ -23,27 +23,31 @@
       <a class="brand" href="index.html" aria-label="Go to homepage">
         <img class="logo-img" src="la-logo.jpg" alt="La logo" />
         <div>
-          <h1>Practice Time</h1>
-          <p>Guess the missing marketing term.</p>
+          <h1 data-i18n="practiceHeader">Practice Time</h1>
+          <p data-i18n="practiceHeaderSub">Guess the missing marketing term.</p>
         </div>
       </a>
       <nav class="nav" aria-label="Main navigation">
-        <a href="index.html">Home</a>
-        <a href="vocab.html">Flip Cards</a>
-        <a class="active" href="practice.html">Practice Time</a>
-        <a href="section.html">Section</a>
-        <a href="casestudy.html">Case Study</a>
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="vocab.html" data-i18n="flipCards">Flip Cards</a>
+        <a class="active" href="practice.html" data-i18n="practiceTime">Practice Time</a>
+        <a href="section.html" data-i18n="section">Section</a>
+        <a href="casestudy.html" data-i18n="caseStudy">Case Study</a>
       </nav>
+      <div class="lang-switch" role="group" aria-label="Language" data-i18n-attr="aria-label:langLabel">
+        <button type="button" data-set-lang="en">🇺🇸 EN</button>
+        <button type="button" data-set-lang="vi">🇻🇳 VI</button>
+      </div>
     </header>
 
     <main>
-      <h2 class="page-title">2,000 Simple Practice Sentences</h2>
-      <p class="page-subtitle">By default, sentences follow the original topic sections. Click <strong>Shuffle All</strong> to mix all sentences in the current filter.</p>
+      <h2 class="page-title" data-i18n="practiceTitle">2,000 Simple Practice Sentences</h2>
+      <p class="page-subtitle" data-i18n="practiceSubtitle">By default, sentences follow the original topic sections. Click <strong>Shuffle All</strong> to mix all sentences in the current filter.</p>
 
       <div class="toolbar">
         <div class="filters">
-          <select id="practiceSection" aria-label="Filter by section"></select>
-          <input id="practiceSearch" type="search" placeholder="Search terms, Vietnamese, definitions, or sentences..." aria-label="Search practice sentences" />
+          <select id="practiceSection" aria-label="Filter by section" data-i18n-attr="aria-label:filterBySection"></select>
+          <input id="practiceSearch" type="search" placeholder="Search terms, Vietnamese, definitions, or sentences..." aria-label="Search practice sentences" data-i18n-attr="placeholder:practiceSearchPlaceholder;aria-label:practiceSearchAria" />
         </div>
         <span class="pill" id="practiceCount"></span>
       </div>
@@ -53,25 +57,27 @@
         <div class="card-panel practice-card" id="practicePanel"></div>
         <p class="status-line" id="practiceStatus"></p>
         <div class="controls">
-          <button class="btn secondary" id="practicePrev">Previous</button>
-          <button class="btn" id="practiceReveal">Reveal Answer</button>
-          <button class="btn secondary" id="practiceNext">Next</button>
-          <button class="btn secondary" id="practiceShuffle">Shuffle All</button>
-          <button class="btn secondary" id="practiceReset">Section Order</button>
+          <button class="btn secondary" id="practicePrev" data-i18n="previous">Previous</button>
+          <button class="btn" id="practiceReveal" data-i18n="revealAnswer">Reveal Answer</button>
+          <button class="btn secondary" id="practiceNext" data-i18n="next">Next</button>
+          <button class="btn secondary" id="practiceShuffle" data-i18n="shuffleAll">Shuffle All</button>
+          <button class="btn secondary" id="practiceReset" data-i18n="sectionOrder">Section Order</button>
         </div>
       </div>
     </main>
   </div>
 
   <script src="practice-data.js"></script>
+  <script src="lang.js"></script>
   <script>
     const DATA = window.PRACTICE_DATA || [];
     const topics = [...new Map(DATA.map(x => [x.section, x.topic])).entries()].sort((a,b)=>a[0]-b[0]);
     const state = { index: 0, revealed: false, items: [...DATA], shuffled: false };
     const $ = (id) => document.getElementById(id);
+    const tr = (key, vars) => window.LaLang ? window.LaLang.t(key, vars) : key;
     function escapeHTML(s) { return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
     function populateSectionSelect(select) {
-      select.innerHTML = '<option value="all">All sections</option>' + topics.map(([num, topic]) => `<option value="${num}">Section ${num} — ${escapeHTML(topic)}</option>`).join('');
+      select.innerHTML = `<option value="all">${tr('allSections')}</option>` + topics.map(([num, topic]) => `<option value="${num}">${tr('section')} ${num} — ${escapeHTML(topic)}</option>`).join('');
     }
     function currentFilteredList() {
       const sectionVal = $('practiceSection').value;
@@ -94,22 +100,22 @@
       const parts = item.blanked.split('[[BLANK]]');
       const blankClass = revealed ? 'blank revealed' : 'blank';
       const answer = revealed ? escapeHTML(item.blank_answer) : '________';
-      return `${escapeHTML(parts[0] || '')}<span class="${blankClass}" id="activeBlank" title="Click to reveal answer">${answer}</span>${escapeHTML(parts.slice(1).join(''))}`;
+      return `${escapeHTML(parts[0] || '')}<span class="${blankClass}" id="activeBlank" title="${tr('clickBlankTitle')}">${answer}</span>${escapeHTML(parts.slice(1).join(''))}`;
     }
     function renderPractice() {
       const items = state.items;
-      $('practiceCount').textContent = items.length ? `${state.index + 1} / ${items.length} sentences` : '0 sentences';
+      $('practiceCount').textContent = items.length ? tr('sentencesCount', { current: state.index + 1, total: items.length }) : tr('zeroSentences');
       $('practiceBar').style.width = progressPct() + '%';
-      $('practiceStatus').textContent = state.shuffled ? 'Shuffle mode is on: sentences are mixed randomly.' : 'Section order is on: sentences follow the uploaded practice file by topic.';
-      if (!items.length) { $('practicePanel').innerHTML = '<div class="empty">No practice sentences match this filter.</div>'; return; }
+      $('practiceStatus').textContent = state.shuffled ? tr('shuffleModeOn') : tr('sectionOrderOn');
+      if (!items.length) { $('practicePanel').innerHTML = `<div class="empty">${tr('noPractice')}</div>`; return; }
       const item = items[state.index];
       const clueText = state.revealed
         ? `<strong>${escapeHTML(item.term)}:</strong> ${escapeHTML(item.definition)}${item.vi ? ` <span class="vi-term" style="font-size: inherit; display:block; margin-top:8px;">${escapeHTML(item.vi)}</span>` : ''}`
-        : `<strong>Clue:</strong> ${escapeHTML(item.definition)}`;
-      $('practicePanel').innerHTML = `<div><div class="week-tag">${escapeHTML(item.id)} • Section ${item.section} — ${escapeHTML(item.topic)}</div><p class="sentence">${blankSentenceHTML(item, state.revealed)}</p><p class="practice-definition visible">${clueText}</p><p class="hint">Guess the term, then click the blank or press <span class="kbd">Space</span> to reveal the answer.</p></div>`;
+        : `<strong>${tr('clue')}:</strong> ${escapeHTML(item.definition)}`;
+      $('practicePanel').innerHTML = `<div><div class="week-tag">${escapeHTML(item.id)} • ${tr('section')} ${item.section} — ${escapeHTML(item.topic)}</div><p class="sentence">${blankSentenceHTML(item, state.revealed)}</p><p class="practice-definition visible">${clueText}</p><p class="hint">${tr('practiceHint')}</p></div>`;
       const blank = $('activeBlank');
       if (blank) blank.addEventListener('click', () => { state.revealed = !state.revealed; renderPractice(); });
-      $('practiceReveal').textContent = state.revealed ? 'Hide Answer' : 'Reveal Answer';
+      $('practiceReveal').textContent = state.revealed ? tr('hideAnswer') : tr('revealAnswer');
     }
     function next() { if (!state.items.length) return; state.index = (state.index + 1) % state.items.length; state.revealed = false; renderPractice(); }
     function prev() { if (!state.items.length) return; state.index = (state.index - 1 + state.items.length) % state.items.length; state.revealed = false; renderPractice(); }
@@ -150,6 +156,7 @@
       if (e.key === 'ArrowLeft') prev();
       if (e.code === 'Space' && !['INPUT','SELECT'].includes(document.activeElement.tagName)) { e.preventDefault(); toggleReveal(); }
     });
+    window.addEventListener('languagechange', () => { const currentSectionValue = $('practiceSection').value; populateSectionSelect($('practiceSection')); $('practiceSection').value = currentSectionValue; renderPractice(); });
     renderPractice();
   </script>
 </body>

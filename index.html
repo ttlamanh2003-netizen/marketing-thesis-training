@@ -23,42 +23,47 @@
       <a class="brand" href="index.html" aria-label="Go to homepage">
         <img class="logo-img" src="la-logo.jpg" alt="La logo" />
         <div>
-          <h1>Learn with La</h1>
-          <p>Marketing English • thesis training • speaking practice</p>
+          <h1 data-i18n="learnWithLa">Learn with La</h1>
+          <p data-i18n="brandTagline">Marketing English • thesis training • speaking practice</p>
         </div>
       </a>
+      <div class="lang-switch" role="group" aria-label="Language" data-i18n-attr="aria-label:langLabel">
+        <button type="button" data-set-lang="en">🇺🇸 EN</button>
+        <button type="button" data-set-lang="vi">🇻🇳 VI</button>
+      </div>
     </header>
 
     <main class="hero">
       <section class="hero-card">
-        <div class="eyebrow">Student learning hub</div>
-        <h2>Choose your learning mode.</h2>
-        <p class="subtitle">A simple space to review marketing terms, study by section, practice simple sentences, and think through real campaign case studies before thesis presentation time.</p>
+        <div class="eyebrow" data-i18n="homeEyebrow">Student learning hub</div>
+        <h2 data-i18n="homeTitle">Choose your learning mode.</h2>
+        <p class="subtitle" data-i18n="homeSubtitle">A simple space to review marketing terms, study by section, practice simple sentences, and think through real campaign case studies before thesis presentation time.</p>
 
         <div class="option-grid">
           <a class="option" href="vocab.html">
             <div class="num">1</div>
-            <h3>Flip Cards</h3>
-            <p>Review 999 marketing keywords with Vietnamese support and simple English definitions.</p>
+            <h3 data-i18n="flipCards">Flip Cards</h3>
+            <p data-i18n="homeVocabDesc">Review 999 marketing keywords with Vietnamese support and simple English definitions.</p>
           </a>
           <a class="option" href="practice.html">
             <div class="num">2</div>
-            <h3>Practice Time</h3>
-            <p>Practice 2,000 simple sentences by section, or shuffle all sentences for quick review.</p>
+            <h3 data-i18n="practiceTime">Practice Time</h3>
+            <p data-i18n="homePracticeDesc">Practice 2,000 simple sentences by section, or shuffle all sentences for quick review.</p>
           </a>
           <a class="option" href="section.html">
             <div class="num">3</div>
-            <h3>Section</h3>
-            <p>Study all vocab by topic in table format, with speaker buttons, US IPA, Vietnamese, and simple English explanations.</p>
+            <h3 data-i18n="section">Section</h3>
+            <p data-i18n="homeSectionDesc">Study all vocab by topic in table format, with speaker buttons, US IPA, Vietnamese, and simple English explanations.</p>
           </a>
           <a class="option" href="casestudy.html">
             <div class="num">4</div>
-            <h3>Case Study</h3>
-            <p>Read campaign examples and practice marketing thinking through real brand stories.</p>
+            <h3 data-i18n="caseStudy">Case Study</h3>
+            <p data-i18n="homeCaseDesc">Read campaign examples and practice marketing thinking through real brand stories.</p>
           </a>
         </div>
       </section>
     </main>
   </div>
+  <script src="lang.js"></script>
 </body>
 </html>

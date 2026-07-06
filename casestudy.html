@@ -71,6 +71,11 @@
     .questions ol { margin: 0 0 0 20px; padding: 0; color: var(--muted); line-height: 1.65; }
     .back-top { display: inline-block; margin-top: 16px; color: var(--accent-dark); font-weight: 800; text-decoration: none; }
     .back-top:hover { text-decoration: underline; }
+
+    .lang-switch { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: rgba(255,255,255,.86); border-radius: 999px; padding: 5px; box-shadow: 0 8px 20px rgba(63,39,20,.07); }
+    .lang-switch button { border: 0; background: transparent; color: var(--muted); border-radius: 999px; padding: 8px 11px; cursor: pointer; font-weight: 850; line-height: 1; }
+    .lang-switch button:hover, .lang-switch button:focus-visible { color: var(--accent-dark); outline: none; }
+    .lang-switch button.active { background: var(--accent); color: #fff; }
     @media (max-width: 860px) {
       .topbar { align-items: flex-start; flex-direction: column; }
       .toc { grid-template-columns: 1fr; }
@@ -86,19 +91,23 @@
       <div class="brand">
         <img class="logo-img" src="la-logo.jpg" alt="La logo" />
         <div>
-          <h1>Learn with La</h1>
-          <p>Marketing English • Case studies • Critical thinking</p>
+          <h1 data-i18n="learnWithLa">Learn with La</h1>
+          <p data-i18n="caseHeaderSub">Marketing English • Case studies • Critical thinking</p>
         </div>
       </div>
-      <div class="case-nav"><a class="nav-link" href="index.html">Home</a><a class="nav-link" href="section.html">Section</a></div>
+      <div class="case-nav"><a class="nav-link" href="index.html" data-i18n="home">Home</a><a class="nav-link" href="section.html" data-i18n="section">Section</a></div>
+      <div class="lang-switch" role="group" aria-label="Language" data-i18n-attr="aria-label:langLabel">
+        <button type="button" data-set-lang="en">🇺🇸 EN</button>
+        <button type="button" data-set-lang="vi">🇻🇳 VI</button>
+      </div>
     </div>
 
     <header class="hero-card">
-      <div class="eyebrow">Case Study Library</div>
-      <h1 class="page-title">Marketing campaigns worth discussing.</h1>
-      <p class="subtitle">Use these short case studies to practice Marketing English, explain campaign logic, and answer professor-style questions with clearer reasoning.</p>
-      <div class="note">Speaking tip: for each case, answer the practice questions using PREP: Point → Reason → Example → Point.</div>
-      <nav class="toc" aria-label="Table of contents">
+      <div class="eyebrow" data-i18n="caseLibrary">Case Study Library</div>
+      <h1 class="page-title" data-i18n="caseTitle">Marketing campaigns worth discussing.</h1>
+      <p class="subtitle" data-i18n="caseSubtitle">Use these short case studies to practice Marketing English, explain campaign logic, and answer professor-style questions with clearer reasoning.</p>
+      <div class="note" data-i18n="caseNote">Speaking tip: for each case, answer the practice questions using PREP: Point → Reason → Example → Point.</div>
+      <nav class="toc" aria-label="Table of contents" data-i18n-attr="aria-label:tableOfContents">
         <a class="toc-card" href="#burger-king-reclaim-the-flame"><span>01</span><strong>Burger King: Reclaim the Flame</strong></a><a class="toc-card" href="#mcdonald-s-viral-ceo-moment"><span>02</span><strong>McDonald&#x27;s: Viral CEO Moment</strong></a><a class="toc-card" href="#connecticut-tourism-pizza-capital-of-the-us"><span>03</span><strong>Connecticut Tourism: Pizza Capital of the US</strong></a><a class="toc-card" href="#svedka-ai-generated-super-bowl-ad"><span>04</span><strong>Svedka: AI-Generated Super Bowl Ad</strong></a><a class="toc-card" href="#burberry-portraits-of-an-icon"><span>05</span><strong>Burberry: Portraits of an Icon</strong></a><a class="toc-card" href="#chips-ahoy-x-stranger-things"><span>06</span><strong>Chips Ahoy x Stranger Things</strong></a><a class="toc-card" href="#duolingo-death-of-duo-owl"><span>07</span><strong>Duolingo: Death of Duo Owl</strong></a><a class="toc-card" href="#airbnb-icons"><span>08</span><strong>Airbnb: Icons</strong></a><a class="toc-card" href="#heinz-ketchup-insurance"><span>09</span><strong>Heinz: Ketchup Insurance</strong></a><a class="toc-card" href="#barbie-cultural-takeover-campaign"><span>10</span><strong>Barbie: Cultural Takeover Campaign</strong></a>
       </nav>
     </header>
@@ -407,5 +416,6 @@
       </article>
     </main>
   </div>
+  <script src="lang.js"></script>
 </body>
 </html>

@@ -23,55 +23,61 @@
       <a class="brand" href="index.html" aria-label="Go to homepage">
         <img class="logo-img" src="la-logo.jpg" alt="La logo" />
         <div>
-          <h1>Section</h1>
-          <p>Table view by topic • speaker • US IPA</p>
+          <h1 data-i18n="sectionHeader">Section</h1>
+          <p data-i18n="sectionHeaderSub">Table view by topic • speaker • US IPA</p>
         </div>
       </a>
       <nav class="nav" aria-label="Main navigation">
-        <a href="index.html">Home</a>
-        <a href="vocab.html">Flip Cards</a>
-        <a href="practice.html">Practice Time</a>
-        <a class="active" href="section.html">Section</a>
-        <a href="casestudy.html">Case Study</a>
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="vocab.html" data-i18n="flipCards">Flip Cards</a>
+        <a href="practice.html" data-i18n="practiceTime">Practice Time</a>
+        <a class="active" href="section.html" data-i18n="section">Section</a>
+        <a href="casestudy.html" data-i18n="caseStudy">Case Study</a>
       </nav>
+      <div class="lang-switch" role="group" aria-label="Language" data-i18n-attr="aria-label:langLabel">
+        <button type="button" data-set-lang="en">🇺🇸 EN</button>
+        <button type="button" data-set-lang="vi">🇻🇳 VI</button>
+      </div>
     </header>
 
     <main>
       <section class="hero-card section-hero" id="top">
-        <div class="eyebrow">Table of Contents</div>
-        <h2 class="section-title">Choose a section to study.</h2>
-        <p class="subtitle">Each section opens as a table. The left column shows the keyword, speaker button, and US IPA. The right column shows the Vietnamese meaning and simple English explanation.</p>
+        <div class="eyebrow" data-i18n="tableOfContents">Table of Contents</div>
+        <h2 class="section-title" data-i18n="sectionTitle">Choose a section to study.</h2>
+        <p class="subtitle" data-i18n="sectionSubtitle">Each section opens as a table. The left column shows the keyword, speaker button, and US IPA. The right column shows the Vietnamese meaning and simple English explanation.</p>
         <div class="section-tools">
-          <input id="sectionSearch" type="search" placeholder="Search sections, words, Vietnamese, definitions, or IPA..." aria-label="Search sections and vocabulary" />
+          <input id="sectionSearch" type="search" placeholder="Search sections, words, Vietnamese, definitions, or IPA..." aria-label="Search sections and vocabulary" data-i18n-attr="placeholder:sectionSearchPlaceholder;aria-label:sectionSearchAria" />
           <span class="pill" id="sectionCount">Loading...</span>
         </div>
         <div class="section-toc" id="sectionToc" aria-label="Vocabulary section table of contents"></div>
       </section>
 
       <section class="section-output" id="sectionOutput" aria-live="polite">
-        <div class="empty section-empty">Choose a section above to open its table.</div>
+        <div class="empty section-empty" data-i18n="chooseSectionEmpty">Choose a section above to open its table.</div>
       </section>
-      <p class="voice-note" id="voiceNote">Voice loading...</p>
+      <p class="voice-note" id="voiceNote" data-i18n="voiceLoading">Voice loading...</p>
     </main>
   </div>
 
   <div class="pdf-modal" id="pdfModal" hidden>
     <div class="pdf-modal-box" role="dialog" aria-modal="true" aria-labelledby="pdfModalTitle" aria-describedby="pdfModalText">
-      <button type="button" class="pdf-close" id="pdfClose" aria-label="Close PDF download dialog">×</button>
+      <button type="button" class="pdf-close" id="pdfClose" aria-label="Close PDF download dialog" data-i18n-attr="aria-label:closePdfDialog">×</button>
       <div class="pdf-icon" aria-hidden="true">⬇</div>
-      <h3 id="pdfModalTitle">Download a PDF print?</h3>
-      <p id="pdfModalText">Your browser will open the print dialog. Choose <strong>Save as PDF</strong> to download this section table.</p>
+      <h3 id="pdfModalTitle" data-i18n="pdfModalTitle">Download a PDF print?</h3>
+      <p id="pdfModalText" data-i18n="pdfModalText">Your browser will open the print dialog. Choose <strong>Save as PDF</strong> to download this section table.</p>
       <div class="pdf-actions">
-        <button type="button" class="mini-btn" id="pdfCancel">Cancel</button>
-        <button type="button" class="mini-btn primary-print-btn" id="pdfConfirm">Print / Save PDF</button>
+        <button type="button" class="mini-btn" id="pdfCancel" data-i18n="cancel">Cancel</button>
+        <button type="button" class="mini-btn primary-print-btn" id="pdfConfirm" data-i18n="printSavePdf">Print / Save PDF</button>
       </div>
     </div>
   </div>
 
   <script src="vocab-data.js"></script>
+  <script src="lang.js"></script>
   <script>
     const DATA = window.VOCAB_DATA || [];
     const $ = (id) => document.getElementById(id);
+    const tr = (key, vars) => window.LaLang ? window.LaLang.t(key, vars) : key;
     const state = { selectedVoice: null, activeSection: null, search: '' };
     function escapeHTML(s) { return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
     function sectionSummary() {
@@ -102,9 +108,9 @@
     function refreshVoiceNote() {
       state.selectedVoice = chooseVoice();
       const note = $('voiceNote');
-      if (!window.speechSynthesis) { note.textContent = 'Speech is not supported in this browser.'; return; }
-      if (state.selectedVoice) note.textContent = `Voice selected: ${state.selectedVoice.name} (${state.selectedVoice.lang}). Female US voice is used when available on this device.`;
-      else note.textContent = 'Voice loading. Try clicking the speaker once if the first tap is silent.';
+      if (!window.speechSynthesis) { note.textContent = tr('speechUnsupported'); return; }
+      if (state.selectedVoice) note.textContent = tr('voiceSelected', { voice: state.selectedVoice.name, lang: state.selectedVoice.lang });
+      else note.textContent = tr('voiceLoading');
     }
     if ('speechSynthesis' in window) {
       refreshVoiceNote();
@@ -134,8 +140,8 @@
         const match = !q || `${sec.section} ${sec.topic} ${items.map(i => `${i.term} ${i.vi} ${i.definition} ${i.ipa}`).join(' ')}`.toLowerCase().includes(q);
         return { ...sec, match };
       }).filter(sec => sec.match);
-      $('sectionCount').textContent = `${DATA.length} words • ${sectionSummary().length} sections`;
-      $('sectionToc').innerHTML = summaries.map(sec => `<button type="button" class="section-toc-card ${state.activeSection === sec.section ? 'active' : ''}" data-section="${sec.section}"><span>${String(sec.section).padStart(2,'0')}</span><strong>${escapeHTML(sec.topic)}</strong><small>${sec.count} words</small></button>`).join('') || '<div class="empty">No sections match this search.</div>';
+      $('sectionCount').textContent = tr('sectionCount', { words: DATA.length, sections: sectionSummary().length });
+      $('sectionToc').innerHTML = summaries.map(sec => `<button type="button" class="section-toc-card ${state.activeSection === sec.section ? 'active' : ''}" data-section="${sec.section}"><span>${String(sec.section).padStart(2,'0')}</span><strong>${escapeHTML(sec.topic)}</strong><small>${sec.count} ${tr('words')}</small></button>`).join('') || `<div class="empty">${tr('noSections')}</div>`;
     }
     function filteredItemsForSection(section) {
       const q = state.search.toLowerCase();
@@ -148,18 +154,18 @@
     function renderSection(section, doScroll=true) {
       state.activeSection = Number(section);
       const allForSection = DATA.filter(item => item.section === state.activeSection);
-      const topic = allForSection[0]?.topic || 'Section';
+      const topic = allForSection[0]?.topic || tr('section');
       const items = filteredItemsForSection(state.activeSection);
       renderToc();
       if (!items.length) {
-        $('sectionOutput').innerHTML = `<div class="empty section-empty">No words match this search inside Section ${state.activeSection}.</div>`;
+        $('sectionOutput').innerHTML = `<div class="empty section-empty">${tr('noWordsInSection', { section: state.activeSection })}</div>`;
         return;
       }
       const rows = items.map(item => `
         <tr>
           <td class="section-word-cell">
             <div class="section-row-number">#${String(item.id).padStart(3,'0')}</div>
-            <div class="table-word-line"><strong>${escapeHTML(item.term)}</strong><button type="button" class="speak-btn table-speak" aria-label="Speak ${escapeHTML(item.term)}" title="Speak ${escapeHTML(item.term)}" data-speak="${escapeHTML(item.speak || item.term)}">🔊</button></div>
+            <div class="table-word-line"><strong>${escapeHTML(item.term)}</strong><button type="button" class="speak-btn table-speak" aria-label="${tr('speakWord')}: ${escapeHTML(item.term)}" title="${tr('speakWord')}: ${escapeHTML(item.term)}" data-speak="${escapeHTML(item.speak || item.term)}">🔊</button></div>
             <div class="table-ipa">${escapeHTML(item.ipa || '')}</div>
           </td>
           <td class="section-meaning-cell">
@@ -170,24 +176,24 @@
       $('sectionOutput').innerHTML = `
         <article class="section-table-card" id="section-${state.activeSection}">
           <div class="print-only print-title">
-            <h1>Learn with La</h1>
-            <h2>Section ${state.activeSection}: ${escapeHTML(topic)}</h2>
-            <p>${items.length} words shown${items.length !== allForSection.length ? ` from ${allForSection.length} total words in this section` : ''}</p>
+            <h1>${tr('learnWithLa')}</h1>
+            <h2>${tr('section')} ${state.activeSection}: ${escapeHTML(topic)}</h2>
+            <p>${items.length !== allForSection.length ? tr('wordsShownFrom', { shown: items.length, total: allForSection.length }) : tr('wordsShown', { shown: items.length })}</p>
           </div>
           <div class="section-table-head">
             <div>
-              <div class="eyebrow">Section ${state.activeSection}</div>
+              <div class="eyebrow">${tr('section')} ${state.activeSection}</div>
               <h2>${escapeHTML(topic)}</h2>
-              <p>${items.length} words shown${items.length !== allForSection.length ? ` from ${allForSection.length} total words in this section` : ''}.</p>
+              <p>${items.length !== allForSection.length ? tr('wordsShownFrom', { shown: items.length, total: allForSection.length }) : tr('wordsShown', { shown: items.length })}.</p>
             </div>
             <div class="section-table-actions">
-              <button type="button" class="mini-btn download-print-btn" data-download-pdf aria-label="Download PDF print for Section ${state.activeSection}">⬇ PDF Print</button>
-              <a class="mini-btn" href="#top">Back to contents</a>
+              <button type="button" class="mini-btn download-print-btn" data-download-pdf aria-label="${tr('pdfAria', { section: state.activeSection })}">${tr('pdfPrint')}</button>
+              <a class="mini-btn" href="#top">${tr('backToContents')}</a>
             </div>
           </div>
           <div class="section-table-wrap">
             <table class="section-table">
-              <thead><tr><th>Keyword + Speaker + US IPA</th><th>Vietnamese Meaning + Simple English Explanation</th></tr></thead>
+              <thead><tr><th>${tr('keywordSpeakerIpa')}</th><th>${tr('meaningDefinition')}</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
           </div>
@@ -214,9 +220,9 @@
     function printActiveSection() {
       if (!state.activeSection) return;
       const allForSection = DATA.filter(item => item.section === state.activeSection);
-      const topic = allForSection[0]?.topic || 'Section';
+      const topic = allForSection[0]?.topic || tr('section');
       const oldTitle = document.title;
-      document.title = `Learn with La - Section ${state.activeSection} - ${topic}`;
+      document.title = `${tr('learnWithLa')} - ${tr('section')} ${state.activeSection} - ${topic}`;
       closePdfModal();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       document.body.classList.add('print-mode');
@@ -253,6 +259,7 @@
     renderToc();
     const hashMatch = location.hash.match(/section-(\d+)/);
     if (hashMatch) renderSection(Number(hashMatch[1]), false);
+    window.addEventListener('languagechange', () => { renderToc(); if (state.activeSection) renderSection(state.activeSection, false); refreshVoiceNote(); });
   </script>
 </body>
 </html>
