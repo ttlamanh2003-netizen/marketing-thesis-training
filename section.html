@@ -55,6 +55,19 @@
     </main>
   </div>
 
+  <div class="pdf-modal" id="pdfModal" hidden>
+    <div class="pdf-modal-box" role="dialog" aria-modal="true" aria-labelledby="pdfModalTitle" aria-describedby="pdfModalText">
+      <button type="button" class="pdf-close" id="pdfClose" aria-label="Close PDF download dialog">×</button>
+      <div class="pdf-icon" aria-hidden="true">⬇</div>
+      <h3 id="pdfModalTitle">Download a PDF print?</h3>
+      <p id="pdfModalText">Your browser will open the print dialog. Choose <strong>Save as PDF</strong> to download this section table.</p>
+      <div class="pdf-actions">
+        <button type="button" class="mini-btn" id="pdfCancel">Cancel</button>
+        <button type="button" class="mini-btn primary-print-btn" id="pdfConfirm">Print / Save PDF</button>
+      </div>
+    </div>
+  </div>
+
   <script src="vocab-data.js"></script>
   <script>
     const DATA = window.VOCAB_DATA || [];
@@ -156,13 +169,21 @@
         </tr>`).join('');
       $('sectionOutput').innerHTML = `
         <article class="section-table-card" id="section-${state.activeSection}">
+          <div class="print-only print-title">
+            <h1>Learn with La</h1>
+            <h2>Section ${state.activeSection}: ${escapeHTML(topic)}</h2>
+            <p>${items.length} words shown${items.length !== allForSection.length ? ` from ${allForSection.length} total words in this section` : ''}</p>
+          </div>
           <div class="section-table-head">
             <div>
               <div class="eyebrow">Section ${state.activeSection}</div>
               <h2>${escapeHTML(topic)}</h2>
               <p>${items.length} words shown${items.length !== allForSection.length ? ` from ${allForSection.length} total words in this section` : ''}.</p>
             </div>
-            <a class="mini-btn" href="#top">Back to contents</a>
+            <div class="section-table-actions">
+              <button type="button" class="mini-btn download-print-btn" data-download-pdf aria-label="Download PDF print for Section ${state.activeSection}">⬇ PDF Print</button>
+              <a class="mini-btn" href="#top">Back to contents</a>
+            </div>
           </div>
           <div class="section-table-wrap">
             <table class="section-table">
@@ -179,12 +200,51 @@
       renderSection(Number(card.dataset.section));
       history.replaceState(null, '', `#section-${card.dataset.section}`);
     });
+    function openPdfModal() {
+      const modal = $('pdfModal');
+      modal.hidden = false;
+      document.body.classList.add('modal-open');
+      $('pdfConfirm').focus();
+    }
+    function closePdfModal() {
+      const modal = $('pdfModal');
+      modal.hidden = true;
+      document.body.classList.remove('modal-open');
+    }
+    function printActiveSection() {
+      if (!state.activeSection) return;
+      const allForSection = DATA.filter(item => item.section === state.activeSection);
+      const topic = allForSection[0]?.topic || 'Section';
+      const oldTitle = document.title;
+      document.title = `Learn with La - Section ${state.activeSection} - ${topic}`;
+      closePdfModal();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      document.body.classList.add('print-mode');
+      const cleanup = () => {
+        document.body.classList.remove('print-mode');
+        document.title = oldTitle;
+      };
+      window.addEventListener('afterprint', cleanup, { once: true });
+      setTimeout(() => window.print(), 80);
+      setTimeout(() => { if (document.body.classList.contains('print-mode')) cleanup(); }, 4000);
+    }
     $('sectionOutput').addEventListener('click', (e) => {
+      const downloadBtn = e.target.closest('[data-download-pdf]');
+      if (downloadBtn) {
+        e.preventDefault();
+        openPdfModal();
+        return;
+      }
       const btn = e.target.closest('[data-speak]');
       if (!btn) return;
       e.preventDefault();
       speak(btn.dataset.speak, btn);
     });
+    $('pdfClose').addEventListener('click', closePdfModal);
+    $('pdfCancel').addEventListener('click', closePdfModal);
+    $('pdfConfirm').addEventListener('click', printActiveSection);
+    $('pdfModal').addEventListener('click', (e) => { if (e.target.id === 'pdfModal') closePdfModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('pdfModal').hidden) closePdfModal(); });
     $('sectionSearch').addEventListener('input', (e) => {
       state.search = e.target.value.trim();
       renderToc();
